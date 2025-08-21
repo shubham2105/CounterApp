@@ -1,10 +1,39 @@
 import { View, Text, TouchableOpacity } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import './global.css' // Import global styles
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const Storage_key ="CounterApp";
 
 const App = () => {
   const [count,setCount] = useState(0);
+  useEffect(()=>{
+      const loadCount = async () =>{
+    try {
+      const value = await AsyncStorage.getItem(Storage_key);
+      if(value !== null){
+        setCount(parseInt(value, 10)); // Ensure value is parsed as an integer
+      }
+    } catch (error) {
+      console.log("Error loading count:", error);
+    }
+  };
+  loadCount();
+  }, []);
+
+  // Save value whenever it changes
+  useEffect(()=>{
+    const saveCount = async () =>{
+      try {
+        await AsyncStorage.setItem(Storage_key, count.toString());
+      } catch (error) {
+        console.log("Error saving count:", error);
+      }
+    };
+    saveCount();
+  }, [count]);
+
   return (
    <SafeAreaView className='flex-1 justify-center items-center bg-slate-50'>
     <Text className='text-3xl font-bold mb-4'>Counter App</Text>
