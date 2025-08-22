@@ -5,21 +5,26 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Storage_key ="CounterApp";
-
+const Theme_Key ="AppTheme";
 const App = () => {
   const [count,setCount] = useState(0);
+  const [theme,setTheme] = useState<"light" | "dark">("light");
   useEffect(()=>{
-      const loadCount = async () =>{
+      const loadData = async () =>{
     try {
       const value = await AsyncStorage.getItem(Storage_key);
       if(value !== null){
         setCount(parseInt(value, 10)); // Ensure value is parsed as an integer
       }
+      const savedTheme = await AsyncStorage.getItem(Theme_Key);
+        if(savedTheme === "light" || savedTheme === "dark"){
+          setTheme(savedTheme as "light" | "dark");
+        }
     } catch (error) {
       console.log("Error loading count:", error);
     }
   };
-  loadCount();
+  loadData();
   }, []);
 
   // Save value whenever it changes
@@ -34,11 +39,26 @@ const App = () => {
     saveCount();
   }, [count]);
 
-  return (
-   <SafeAreaView className='flex-1 justify-center items-center bg-slate-50'>
-    <Text className='text-3xl font-bold mb-4'>Counter App</Text>
+  // Save theme whenever it changes
+  useEffect(()=>{
+    const saveTheme = async () =>{
+      try {
+        await AsyncStorage.setItem(Theme_Key,theme)
+      } catch (error) {
+        console.log("Error saving theme:", error);
+      }
+    };
+    saveTheme();
+  }, [theme])
 
-    <Text className='text-6xl font-extrabold text-blue-500 my-6'>{count}</Text>
+  const toggleTheme = ()=>{
+    setTheme(theme === "light" ? "dark" : "light");
+  }
+  return (
+   <SafeAreaView className={`flex-1 justify-center items-center ${theme === "dark" ? "bg-gray-900" : "bg-slate-50"}`}>
+    <Text className={`text-3xl font-bold mb-4 ${theme === "dark" ? "text-white" : "text-black"}`}>Counter App</Text>
+
+    <Text className={`text-6xl font-extrabold text-blue-500 my-6 ${theme === "dark" ? "text-green-400": "text-blue-500"}`}>{count}</Text>
     <View className=' flex-row flex-wrap justify-center'>
       <TouchableOpacity className='bg-blue-500 px-5 py-3 rounded-xl m-2'
         onPress={()=> setCount(count+1)}
@@ -58,6 +78,11 @@ const App = () => {
         <Text className='text-white text-lg font-semibold'>Reset</Text>
       </TouchableOpacity>
     </View>
+    <TouchableOpacity className='bg-purple-500 px-5 py-3 mt-4 rounded-xl' onPress={toggleTheme}>
+      <Text className='text-white text-lg font-semibold'>
+        Switch to {theme === "light" ? "Dark" : "Light"} Mode
+      </Text>
+    </TouchableOpacity>
    </SafeAreaView>
   )
 }
